@@ -362,6 +362,12 @@ pub(crate) fn edit_groups<T: Named>(groups: &mut Vec<Group<T>>, action: &str, p:
             let g = req_str(p, "group", cmd)?;
             let to = req_str(p, "name", cmd)?.to_string();
             let i = groups.iter().position(|x| x.name == g).ok_or_else(|| bad(cmd, format!("no group \"{g}\"")))?;
+            // Group names are unique (swatch sibling refuses the same; newGroup dedupes), so a
+            // rename onto an existing name must be refused too (#6768): two groups with one name
+            // make delete/move reach only the first and a replace-import delete both.
+            if g != to && groups.iter().any(|x| x.name == to) {
+                return Err(bad(cmd, format!("a group named \"{to}\" already exists")));
+            }
             groups[i].name = to.clone();
             Ok(json!({"group": to}))
         }

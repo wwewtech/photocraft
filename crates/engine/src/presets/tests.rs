@@ -317,6 +317,30 @@ fn gradient_new_rename_move_delete_groups() {
     assert!(s.execute("gradient.presets.edit", json!({"action": "explode"})).is_err());
 }
 
+/// Group names are unique: renaming a gradient group onto a name another group already has must
+/// be refused, like the swatch sibling does (#6768). Two groups with one name would make
+/// delete/move reach only the first and a replace-import delete both.
+#[test]
+fn gradient_group_rename_refuses_a_taken_name() {
+    let mut s = Session::new();
+    s.execute("gradient.presets.edit", json!({"action": "newGroup", "name": "Pastels"})).unwrap();
+    s.execute("gradient.presets.edit", json!({"action": "newGroup", "name": "Basics"})).unwrap();
+    let err = s.execute("gradient.presets.edit", json!({"action": "renameGroup", "group": "Pastels", "name": "Basics"})).unwrap_err();
+    assert!(err.to_string().contains("already exists"), "{err}");
+    // The refused rename changed nothing: "Pastels" is still there and "Basics" is still one group.
+    let v = s.execute("gradient.presets.list", json!({})).unwrap();
+    let names: Vec<&str> = v["groups"].as_array().unwrap().iter().filter_map(|g| g["name"].as_str()).collect();
+    assert_eq!(names.iter().filter(|n| **n == "Basics").count(), 1, "{names:?}");
+    assert!(names.contains(&"Pastels"), "{names:?}");
+    // Renaming to its own name is a no-op, not an error.
+    s.execute("gradient.presets.edit", json!({"action": "renameGroup", "group": "Pastels", "name": "Pastels"})).unwrap();
+    // A free name is taken.
+    s.execute("gradient.presets.edit", json!({"action": "renameGroup", "group": "Pastels", "name": "Darks"})).unwrap();
+    let v = s.execute("gradient.presets.list", json!({})).unwrap();
+    let names: Vec<&str> = v["groups"].as_array().unwrap().iter().filter_map(|g| g["name"].as_str()).collect();
+    assert!(names.contains(&"Darks") && !names.contains(&"Pastels"), "{names:?}");
+}
+
 #[test]
 fn presets_persist_through_preferences_json() {
     let mut s = Session::new();
