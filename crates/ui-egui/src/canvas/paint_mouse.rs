@@ -41,10 +41,10 @@ pub fn sync_tool_brush(app: &mut PhotocraftApp) {
         // in Normal mode: each tool's Mode starts at Normal, so a Multiply Brush doesn't make the
         // first Pattern Stamp stroke multiply (or give Healing a mode its menu doesn't have).
         // The Art History Brush also starts at full opacity (#10263): its Opacity is its own.
-        // The Background Eraser, the Healing Brush, the Burn and Dodge tools and the Clone Stamp
-        // start with their own measured tips instead, as the whole brush Reset Tool gives them
-        // (#11911, #12099, #12671, #12684, #12601).
-        None if matches!(tool, Tool::BackgroundEraser | Tool::Healing | Tool::Burn | Tool::Dodge | Tool::CloneStamp) => fresh_brush(tool, &current),
+        // The Background Eraser, the Healing Brush, the Burn and Dodge tools, the Clone Stamp
+        // and the Quick Selection tool start with their own measured tips instead, as the whole
+        // brush Reset Tool gives them (#11911, #12099, #12671, #12684, #12601, #12929).
+        None if matches!(tool, Tool::BackgroundEraser | Tool::Healing | Tool::Burn | Tool::Dodge | Tool::CloneStamp | Tool::QuickSelection) => fresh_brush(tool, &current),
         None => {
             let opacity = if tool == Tool::ArtHistoryBrush { BrushSettings::default().opacity } else { current.opacity };
             BrushSettings { smoothing: first_smoothing(), mode: photocraft_color::BlendMode::Normal, opacity, ..current }
@@ -83,12 +83,16 @@ const HEALING_BRUSH_TIP: (f32, f32, f32) = (19.0, 1.0, 0.25);
 const TONING_TOOL_TIP: (f32, f32, f32) = (65.0, 0.0, 0.25);
 /// The Clone Stamp's tip after Reset Tool (#12601): a 21 px soft round at 25 % spacing.
 const CLONE_STAMP_TIP: (f32, f32, f32) = (21.0, 0.0, 0.25);
+/// The Quick Selection tool's tip after Reset Tool (#12929): size 30 px; hardness, spacing and
+/// angle are kept as they are.
+const QUICK_SELECTION_TIP: f32 = 30.0;
 
 /// `tool`'s brush as it starts out (Reset Tool, #2825): the default brush at Photoshop's
 /// smoothing, with the session's own fields of `current`. The Brush tool's tip is
 /// [`BRUSH_TOOL_TIP`], the Background Eraser's [`BACKGROUND_ERASER_TIP`], the Healing Brush's
 /// [`HEALING_BRUSH_TIP`], the Burn and Dodge tools' [`TONING_TOOL_TIP`], the Clone Stamp's
-/// [`CLONE_STAMP_TIP`] with no smoothing; the other tools keep the default tip.
+/// [`CLONE_STAMP_TIP`] with no smoothing, and Quick Selection's size [`QUICK_SELECTION_TIP`];
+/// the other tools keep the default tip.
 pub(crate) fn fresh_brush(tool: Tool, current: &BrushSettings) -> BrushSettings {
     let mut brush = BrushSettings { smoothing: first_smoothing(), ..BrushSettings::default() };
     match tool {
@@ -100,6 +104,7 @@ pub(crate) fn fresh_brush(tool: Tool, current: &BrushSettings) -> BrushSettings 
             (brush.size, brush.hardness, brush.spacing) = CLONE_STAMP_TIP;
             brush.smoothing.amount = 0.0;
         }
+        Tool::QuickSelection => brush.size = QUICK_SELECTION_TIP,
         _ => {}
     }
     session_fields(current, &brush)

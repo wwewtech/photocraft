@@ -86,7 +86,7 @@ fn reset_tool(app: &mut PhotocraftApp, tool: Tool) {
         // The session brush is the options bar's tool's: make sure it is `tool`'s before resetting.
         crate::paint_mouse::sync_tool_brush(app);
         app.ui.tool_brushes.retain(|(t, _)| *t != tool);
-        reset_session_brush(app);
+        reset_session_brush(app, tool);
     }
 }
 
@@ -97,7 +97,7 @@ fn reset_all(app: &mut PhotocraftApp) {
     app.ui.tool_options = ToolOptions::default();
     app.ui.artboard_tool = Default::default();
     app.ui.selection_mode = 0;
-    reset_session_brush(app);
+    reset_session_brush(app, app.ui.brush_tool);
     // Every other painting tool gets its own starting brush. Left without one, it would take the
     // live brush when picked (`sync_tool_brush`), and the tools' starting tips differ (#11810).
     let (live, current) = (app.ui.brush_tool, app.session.tools.brush.clone());
@@ -109,8 +109,8 @@ fn reset_all(app: &mut PhotocraftApp) {
 }
 
 /// The live brush is `app.ui.brush_tool`'s: give it that tool's starting brush.
-fn reset_session_brush(app: &mut PhotocraftApp) {
-    app.session.tools.brush = crate::paint_mouse::fresh_brush(app.ui.brush_tool, &app.session.tools.brush);
+fn reset_session_brush(app: &mut PhotocraftApp, tool: Tool) {
+    app.session.tools.brush = crate::paint_mouse::fresh_brush(tool, &app.session.tools.brush);
     app.session.tools.brush_gesture = None;
     app.session.tools.current_preset = None;
     app.session.tools.brush_changed();

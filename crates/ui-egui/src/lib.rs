@@ -1086,3 +1086,5 @@ mod background_eraser_digit_keys_tests;
 
 #[cfg(test)]
 mod clone_stamp_reset_tip_tests;
+#[cfg(test)]
+mod quick_selection_reset_tests;
