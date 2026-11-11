@@ -87,6 +87,9 @@ const HEALING_BRUSH_TIP: (f32, f32, f32) = (19.0, 1.0, 0.25);
 const TONING_TOOL_TIP: (f32, f32, f32) = (65.0, 0.0, 0.25);
 /// The Clone Stamp's tip after Reset Tool (#12601): a 21 px soft round at 25 % spacing.
 const CLONE_STAMP_TIP: (f32, f32, f32) = (21.0, 0.0, 0.25);
+/// The Quick Selection tool's tip after Reset Tool (#12929): size 30 px; hardness, spacing and
+/// angle are kept as they are.
+const QUICK_SELECTION_TIP: f32 = 30.0;
 /// The Remove tool's size after Reset Tool (#12548): 19 px. Its hardness and spacing are not
 /// measured, so they stay the default brush's.
 const REMOVE_TOOL_SIZE: f32 = 19.0;
@@ -95,8 +98,8 @@ const REMOVE_TOOL_SIZE: f32 = 19.0;
 /// smoothing, with the session's own fields of `current`. The Brush tool's tip is
 /// [`BRUSH_TOOL_TIP`], the Background Eraser's [`BACKGROUND_ERASER_TIP`], the Healing Brush's
 /// [`HEALING_BRUSH_TIP`], the Burn, Dodge and Sponge tools' [`TONING_TOOL_TIP`], the Clone Stamp's
-/// [`CLONE_STAMP_TIP`] with no smoothing, the Remove tool's size [`REMOVE_TOOL_SIZE`]; the other
-/// tools keep the default tip.
+/// [`CLONE_STAMP_TIP`] with no smoothing, the Remove tool's size [`REMOVE_TOOL_SIZE`], and the
+/// Quick Selection tool's size [`QUICK_SELECTION_TIP`]; the other tools keep the default tip.
 pub(crate) fn fresh_brush(tool: Tool, current: &BrushSettings) -> BrushSettings {
     let mut brush = BrushSettings { smoothing: first_smoothing(), ..BrushSettings::default() };
     match tool {
@@ -109,6 +112,7 @@ pub(crate) fn fresh_brush(tool: Tool, current: &BrushSettings) -> BrushSettings 
             brush.smoothing.amount = 0.0;
         }
         Tool::Remove => brush.size = REMOVE_TOOL_SIZE,
+        Tool::QuickSelection => brush.size = QUICK_SELECTION_TIP,
         _ => {}
     }
     session_fields(current, &brush)
